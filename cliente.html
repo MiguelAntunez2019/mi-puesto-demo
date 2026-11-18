@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="es-CL">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Artesanías Mapuche Rayen · Tienda</title>
+  <meta name="description" content="Tienda de ejemplo: artesanía y productos de la Araucanía.">
+  <meta name="theme-color" content="#C8502A">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon.svg">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="cliente">
+  <header class="topbar">
+    <a href="index.html" class="topbar-volver" aria-label="Volver a la portada">←</a>
+    <div class="topbar-titulo">
+      <strong id="tienda-nombre">Artesanías Mapuche Rayen</strong>
+      <small id="tienda-slogan">Hecho a mano en la Araucanía</small>
+    </div>
+    <a href="#carrito" class="btn-carrito" aria-label="Ver carrito">🛒<span id="carrito-badge" class="badge" hidden>0</span></a>
+  </header>
+
+  <main class="contenedor">
+    <section id="v-catalogo">
+      <div class="hero-tienda">
+        <p>🌿 Artesanía y productos de la tierra, con despacho en Temuco y alrededores.</p>
+      </div>
+      <div class="chips" id="filtros-cat"></div>
+      <div class="grid-productos" id="grid-productos"></div>
+    </section>
+
+    <section id="v-carrito" hidden>
+      <h2>Tu carrito</h2>
+      <div id="carrito-lista"></div>
+      <div class="total-linea" id="carrito-total-linea"><span>Total</span><strong id="carrito-total">$0</strong></div>
+      <form id="form-entrega" class="tarjeta form" novalidate>
+        <h3>Datos de entrega</h3>
+        <label>Nombre
+          <input name="nombre" required autocomplete="name" placeholder="Ej: María González">
+        </label>
+        <label>Teléfono
+          <input name="telefono" type="tel" required inputmode="tel" autocomplete="tel" placeholder="+56 9 1234 5678">
+        </label>
+        <label>Dirección
+          <input name="direccion" required autocomplete="street-address" placeholder="Calle, número y comuna">
+        </label>
+        <label>Fecha de entrega deseada
+          <input name="fechaEntrega" type="date" required>
+        </label>
+        <label>Comentario (opcional)
+          <textarea name="comentario" rows="2" placeholder="Ej: dejar en conserjería"></textarea>
+        </label>
+        <p class="form-error" id="form-error" hidden></p>
+        <button class="btn btn-primario btn-grande" type="submit">Continuar al pago</button>
+      </form>
+      <a href="#catalogo" class="btn btn-texto">← Seguir comprando</a>
+    </section>
+
+    <section id="v-pago" hidden>
+      <h2>Pago</h2>
+      <div class="tarjeta" id="pago-resumen"></div>
+      <h3>Elige cómo pagar</h3>
+      <div class="metodos">
+        <button type="button" class="metodo" data-metodo="Transferencia" aria-pressed="false">
+          <span class="metodo-icono">🏦</span><span>Transferencia<small>Desde cualquier banco</small></span>
+        </button>
+        <button type="button" class="metodo" data-metodo="Mercado Pago" aria-pressed="false">
+          <span class="metodo-icono">💙</span><span>Mercado Pago<small>Tarjeta o saldo</small></span>
+        </button>
+        <button type="button" class="metodo" data-metodo="Webpay" aria-pressed="false">
+          <span class="metodo-icono">💳</span><span>Webpay<small>Débito, crédito o prepago</small></span>
+        </button>
+      </div>
+      <div id="metodo-detalle" class="tarjeta" hidden></div>
+      <button id="btn-pagar" type="button" class="btn btn-primario btn-grande" disabled>Elige un medio de pago</button>
+      <p class="nota centro">Pago simulado: no se realiza ningún cobro.</p>
+      <a href="#carrito" class="btn btn-texto">← Volver al carrito</a>
+    </section>
+
+    <section id="v-confirmacion" hidden>
+      <div class="confirmacion">
+        <div class="check">✓</div>
+        <h2>¡Pedido recibido!</h2>
+        <p>Tu número de pedido es</p>
+        <p class="num-pedido" id="conf-numero">#0000</p>
+        <div class="tarjeta" id="conf-resumen"></div>
+        <p class="nota">Te escribiremos por WhatsApp para coordinar la entrega.</p>
+        <a href="#catalogo" class="btn btn-primario btn-grande">Volver a la tienda</a>
+        <a href="negocio.html#pedidos" class="btn btn-texto">Ver cómo le llega al negocio →</a>
+      </div>
+    </section>
+  </main>
+
+  <div id="barra-carrito" class="barra-carrito" hidden>
+    <a href="#carrito" class="btn btn-primario btn-grande">
+      <span>Ver carrito (<span id="barra-cant">0</span>)</span><strong id="barra-total">$0</strong>
+    </a>
+  </div>
+
+  <div id="procesando" class="overlay" hidden>
+    <div class="spinner"></div>
+    <p id="procesando-texto">Procesando pago…</p>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

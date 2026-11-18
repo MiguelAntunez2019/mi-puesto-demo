@@ -1,0 +1,20 @@
+{
+  "name": "Mi Puesto · Ventas para pymes",
+  "short_name": "Mi Puesto",
+  "description": "Tienda online, pedidos, stock y balance para microempresas chilenas.",
+  "lang": "es-CL",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FFF7EF",
+  "theme_color": "#C8502A",
+  "icons": [
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "icons/icon-maskable.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Panel del negocio", "short_name": "Negocio", "url": "./negocio.html", "icons": [{ "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml" }] },
+    { "name": "Tienda", "short_name": "Tienda", "url": "./cliente.html", "icons": [{ "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml" }] }
+  ]
+}

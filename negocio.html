@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="es-CL">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Mi Puesto · Panel del negocio</title>
+  <meta name="description" content="Panel de ventas: pedidos, stock y balance.">
+  <meta name="theme-color" content="#C8502A">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon.svg">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="negocio">
+  <header class="topbar">
+    <a href="index.html" class="topbar-volver" aria-label="Volver a la portada">←</a>
+    <div class="topbar-titulo">
+      <strong id="neg-nombre">Artesanías Mapuche Rayen</strong>
+      <small>Panel del negocio</small>
+    </div>
+    <button id="btn-notif" type="button" class="btn-icono" aria-label="Activar notificaciones">🔔</button>
+  </header>
+
+  <main class="contenedor con-nav">
+    <section id="s-inicio">
+      <p class="saludo" id="saludo">Hola 👋</p>
+      <div id="aviso-notif" class="tarjeta aviso" hidden>
+        <p><strong>Activa los avisos</strong> para enterarte de cada pedido mientras atiendes en la feria.</p>
+        <button type="button" class="btn btn-primario" id="btn-notif-2">🔔 Activar notificaciones</button>
+      </div>
+      <div class="kpis" id="kpis"></div>
+      <div class="acciones-2">
+        <a class="btn btn-secundario" href="cliente.html" target="_blank" rel="noopener">🛍️ Abrir mi tienda</a>
+        <button type="button" class="btn btn-secundario" id="btn-simular">⚡ Simular pedido</button>
+      </div>
+      <h3>Stock bajo</h3>
+      <div id="inicio-stock" class="lista"></div>
+      <h3>Últimos pedidos</h3>
+      <div id="inicio-pedidos" class="lista"></div>
+    </section>
+
+    <section id="s-pedidos" hidden>
+      <h2>Pedidos</h2>
+      <div class="chips" id="filtro-estados"></div>
+      <div id="lista-pedidos" class="lista"></div>
+    </section>
+
+    <section id="s-productos" hidden>
+      <h2>Productos y stock</h2>
+      <div class="acciones-2">
+        <button type="button" id="btn-nuevo-prod" class="btn btn-primario">+ Nuevo producto</button>
+        <button type="button" id="btn-escanear" class="btn btn-secundario">📷 Escanear código</button>
+      </div>
+      <input id="buscar-prod" type="search" class="input-buscar" placeholder="Buscar por nombre o código" aria-label="Buscar producto">
+      <div id="lista-productos" class="lista"></div>
+    </section>
+
+    <section id="s-balance" hidden>
+      <h2>Balance</h2>
+      <div class="kpis" id="bal-kpis"></div>
+      <div class="tarjeta">
+        <h3>Ventas de los últimos 7 días</h3>
+        <div id="bal-grafico" class="grafico"></div>
+      </div>
+      <div class="tarjeta">
+        <h3>Más vendidos de la semana</h3>
+        <div id="bal-top"></div>
+      </div>
+      <div class="tarjeta">
+        <h3>Exportar</h3>
+        <p class="nota">Archivos que se abren directo en Excel.</p>
+        <div class="acciones-col">
+          <button type="button" id="btn-csv-ventas" class="btn btn-primario">⬇️ Descargar Excel de ventas</button>
+          <button type="button" id="btn-csv-stock" class="btn btn-secundario">⬇️ Descargar Excel de stock</button>
+        </div>
+      </div>
+      <button type="button" id="btn-reset" class="btn btn-texto btn-peligro">Restablecer datos de la demo</button>
+    </section>
+  </main>
+
+  <nav class="nav-inferior" aria-label="Secciones">
+    <a href="#inicio" data-sec="inicio"><span>🏠</span>Inicio</a>
+    <a href="#pedidos" data-sec="pedidos"><span>🧾</span>Pedidos<b id="nav-badge" class="badge" hidden>0</b></a>
+    <a href="#productos" data-sec="productos"><span>📦</span>Productos</a>
+    <a href="#balance" data-sec="balance"><span>📊</span>Balance</a>
+  </nav>
+
+  <div id="alertas" class="alertas" aria-live="assertive"></div>
+
+  <div id="modal" class="modal" hidden>
+    <div class="modal-fondo" data-cerrar></div>
+    <div class="modal-caja" role="dialog" aria-modal="true">
+      <button type="button" class="modal-cerrar" data-cerrar aria-label="Cerrar">×</button>
+      <div id="modal-contenido"></div>
+    </div>
+  </div>
+
+  <div id="ticket-print" class="ticket-print"></div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
