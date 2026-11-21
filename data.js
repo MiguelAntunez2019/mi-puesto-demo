@@ -82,6 +82,9 @@
       ciudad: 'Temuco',
       telefonoVisible: '+56 9 0000 0000'
     },
+    usuarios: [
+      { usuario: 'rayen', clave: 'demo123', nombre: 'Rayen' }
+    ],
     productos,
     pedidos,
     repartidores,

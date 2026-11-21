@@ -4,6 +4,7 @@
   const KEY = 'miPuesto.db.v1';
   const KEY_CARRITO = 'miPuesto.carrito.v1';
   const KEY_VISTOS = 'miPuesto.vistos.v1';
+  const KEY_SESION = 'miPuesto.sesion.v1';
   const ESTADOS = ['Nuevo', 'Preparando', 'Despachado', 'Entregado'];
   const PAGOS = ['Transferencia', 'Mercado Pago', 'Webpay'];
   const TONOS = ['#F3D9C8', '#EADBF0', '#DDEEF0', '#F4E6C9', '#E3EED9', '#FBE7B5', '#F2D4CF'];
@@ -23,6 +24,11 @@
   function escribir(k, v) {
     memoria[k] = v;
     try { localStorage.setItem(k, v); } catch (e) {}
+  }
+
+  function borrar(k) {
+    delete memoria[k];
+    try { localStorage.removeItem(k); } catch (e) {}
   }
 
   const clonar = o => JSON.parse(JSON.stringify(o));
@@ -348,7 +354,62 @@
     ruta();
   }
 
+  function sesionActual() {
+    const raw = leer(KEY_SESION);
+    if (!raw) return null;
+    try {
+      const s = JSON.parse(raw);
+      const u = (window.DEMO_DATA.usuarios || []).find(x => x.usuario === s.usuario);
+      return u ? s : null;
+    } catch (e) { return null; }
+  }
+
   function initNegocio() {
+    const entrar = () => {
+      document.body.classList.remove('sin-sesion');
+      iniciarPanel();
+    };
+    if (sesionActual()) { entrar(); return; }
+
+    const form = $('#form-login');
+    const error = $('#login-error');
+    $('#login-negocio').textContent = window.DEMO_DATA.negocio.nombre;
+
+    $('#btn-datos-prueba').addEventListener('click', () => {
+      const u = window.DEMO_DATA.usuarios[0];
+      form.usuario.value = u.usuario;
+      form.clave.value = u.clave;
+      error.hidden = true;
+      form.querySelector('[type=submit]').focus();
+    });
+
+    form.addEventListener('input', () => { error.hidden = true; });
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const usuario = form.usuario.value.trim().toLowerCase();
+      const clave = form.clave.value;
+      if (!usuario || !clave) {
+        error.textContent = 'Ingresa tu usuario y contraseña.';
+        error.hidden = false;
+        return;
+      }
+      const u = (window.DEMO_DATA.usuarios || []).find(x => x.usuario === usuario && x.clave === clave);
+      if (!u) {
+        error.textContent = 'Usuario o contraseña incorrectos.';
+        error.hidden = false;
+        form.clave.value = '';
+        form.clave.focus();
+        return;
+      }
+      escribir(KEY_SESION, JSON.stringify({ usuario: u.usuario, nombre: u.nombre, desde: new Date().toISOString() }));
+      entrar();
+    });
+
+    form.usuario.focus();
+  }
+
+  function iniciarPanel() {
     const neg = window.DEMO_DATA.negocio;
     const reps = window.DEMO_DATA.repartidores;
     const SECCIONES = ['inicio', 'pedidos', 'productos', 'balance'];
@@ -1046,6 +1107,10 @@
     $('#btn-csv-ventas').addEventListener('click', exportarVentas);
     $('#btn-csv-stock').addEventListener('click', exportarStock);
     $('#btn-reset').addEventListener('click', confirmarReset);
+    $('#btn-salir').addEventListener('click', () => {
+      borrar(KEY_SESION);
+      location.replace('negocio.html');
+    });
 
     window.addEventListener('hashchange', ruta);
     window.addEventListener('storage', e => { if (e.key === KEY) sincronizar(); });

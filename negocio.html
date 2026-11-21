@@ -11,7 +11,32 @@
   <link rel="apple-touch-icon" href="icons/icon.svg">
   <link rel="stylesheet" href="styles.css">
 </head>
-<body data-page="negocio">
+<body data-page="negocio" class="sin-sesion">
+  <div id="pantalla-login" class="login">
+    <div class="banner-demo">Prototipo de demostración</div>
+    <main class="login-main">
+      <div class="logo"><img src="icons/icon.svg" alt="" width="72" height="72"></div>
+      <h1>Ingresa a tu negocio</h1>
+      <p class="nota" id="login-negocio">Artesanías Mapuche Rayen</p>
+      <form id="form-login" class="form tarjeta" novalidate>
+        <label>Usuario
+          <input name="usuario" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+        </label>
+        <label>Contraseña
+          <input name="clave" type="password" autocomplete="current-password" required>
+        </label>
+        <p class="form-error" id="login-error" role="alert" hidden></p>
+        <button type="submit" class="btn btn-primario btn-grande">Ingresar</button>
+      </form>
+      <div class="tarjeta login-demo">
+        <p><strong>Datos de prueba</strong></p>
+        <p>Usuario <code>rayen</code> · Contraseña <code>demo123</code></p>
+        <button type="button" class="btn btn-secundario btn-chico" id="btn-datos-prueba">Usar datos de prueba</button>
+      </div>
+      <a href="index.html" class="btn btn-texto">← Volver a la portada</a>
+    </main>
+  </div>
+
   <header class="topbar">
     <a href="index.html" class="topbar-volver" aria-label="Volver a la portada">←</a>
     <div class="topbar-titulo">
@@ -74,6 +99,7 @@
           <button type="button" id="btn-csv-stock" class="btn btn-secundario">⬇️ Descargar Excel de stock</button>
         </div>
       </div>
+      <button type="button" id="btn-salir" class="btn btn-secundario btn-salir">🚪 Cerrar sesión</button>
       <button type="button" id="btn-reset" class="btn btn-texto btn-peligro">Restablecer datos de la demo</button>
     </section>
   </main>

@@ -53,7 +53,7 @@ GitHub Pages sirve por HTTPS, que es justo lo que se necesita para la cámara, l
 ## Probar el flujo completo (guion para la presentación)
 
 ### Con un solo dispositivo
-1. Abre la URL y entra a **Ver como negocio**.
+1. Abre la URL y entra a **Ver como negocio**. Ingresa con el usuario `rayen` y la contraseña `demo123` (o pulsa **Usar datos de prueba**). Es un login de demostración: la clave se valida en el navegador, no es seguro para uso real.
 2. Pulsa **🔔 Activar notificaciones** y acepta el permiso.
 3. Pulsa **🛍️ Abrir mi tienda**: se abre la tienda en otra pestaña.
 4. En la tienda:
