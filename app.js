@@ -9,6 +9,9 @@
   const PAGOS = ['Transferencia', 'Mercado Pago', 'Webpay'];
   const TONOS = ['#F3D9C8', '#EADBF0', '#DDEEF0', '#F4E6C9', '#E3EED9', '#FBE7B5', '#F2D4CF'];
   const memoria = Object.create(null);
+  const USA_API = location.protocol !== 'file:' && !/github\.io$/.test(location.hostname) && location.port !== '8765';
+  const SLUG = new URLSearchParams(location.search).get('tienda') || 'artesanias-rayen';
+  let remoto = null;
 
   const $ = (s, c = document) => c.querySelector(s);
   const $$ = (s, c = document) => Array.from(c.querySelectorAll(s));
@@ -39,9 +42,10 @@
     return { productos: d.productos, pedidos: d.pedidos, siguienteId: maxId(d.pedidos) + 1 };
   }
 
-  function guardar(db) { escribir(KEY, JSON.stringify(db)); }
+  function guardar(db) { if (!USA_API) escribir(KEY, JSON.stringify(db)); }
 
   function cargar() {
+    if (USA_API) return remoto || { productos: [], pedidos: [], siguienteId: 0 };
     const raw = leer(KEY);
     if (raw) {
       try {
@@ -98,6 +102,73 @@
     toast.timer = setTimeout(() => t.classList.remove('visible'), 2800);
   }
 
+  function sesionGuardada() {
+    try { return JSON.parse(leer(KEY_SESION)) || null; } catch (e) { return null; }
+  }
+
+  async function api(ruta, opciones = {}) {
+    const s = sesionGuardada();
+    const headers = { Accept: 'application/json' };
+    if (opciones.body !== undefined) headers['Content-Type'] = 'application/json';
+    if (s && s.token) headers.Authorization = 'Bearer ' + s.token;
+    let r;
+    try {
+      r = await fetch('api/' + ruta, {
+        method: opciones.method || 'GET',
+        headers,
+        body: opciones.body !== undefined ? JSON.stringify(opciones.body) : undefined,
+        cache: 'no-store'
+      });
+    } catch (e) {
+      throw new Error('No hay conexión con el servidor. Revisa tu internet.');
+    }
+    const datos = await r.json().catch(() => null);
+    if (r.status === 401 && s && s.token && ruta !== 'auth/login') {
+      borrar(KEY_SESION);
+      location.replace('negocio.html');
+      throw new Error('Tu sesión expiró. Ingresa de nuevo.');
+    }
+    if (!r.ok) {
+      const msg = r.status === 429 ? 'Demasiados intentos. Espera un minuto.' : (datos && datos.error) || 'Ocurrió un error. Intenta de nuevo.';
+      const e = new Error(msg);
+      e.status = r.status;
+      throw e;
+    }
+    return datos;
+  }
+
+  function aplicarNegocio(n) {
+    Object.assign(window.DEMO_DATA.negocio, {
+      nombre: n.nombre,
+      slogan: n.slogan || '',
+      duena: n.duena || n.nombre,
+      ciudad: n.ciudad || '',
+      telefonoVisible: n.telefonoVisible || '',
+      slug: n.slug
+    });
+  }
+
+  async function cargarTienda() {
+    const t = await api('tienda/' + encodeURIComponent(SLUG));
+    aplicarNegocio(t.negocio);
+    remoto = { productos: t.productos, pedidos: [], siguienteId: 0 };
+  }
+
+  async function cargarPanel() {
+    const p = await api('panel');
+    aplicarNegocio(p.negocio);
+    window.DEMO_DATA.repartidores.splice(0, Infinity, ...p.repartidores);
+    window.DEMO_DATA.clientesEjemplo.splice(0, Infinity, ...p.clientes);
+    remoto = { productos: p.productos, pedidos: p.pedidos, siguienteId: 0 };
+    return JSON.stringify([p.productos, p.pedidos, p.repartidores]);
+  }
+
+  function reemplazar(lista, item) {
+    const i = lista.findIndex(x => x.id === item.id);
+    if (i >= 0) lista[i] = item;
+    else lista.unshift(item);
+  }
+
   function crearPedido(datos, items) {
     return actualizar(db => {
       const lineas = [];
@@ -145,6 +216,7 @@
     const neg = window.DEMO_DATA.negocio;
     $('#tienda-nombre').textContent = neg.nombre;
     $('#tienda-slogan').textContent = neg.slogan;
+    document.title = `${neg.nombre} · Tienda`;
     const VISTAS = ['catalogo', 'carrito', 'pago', 'confirmacion'];
     const DETALLE_PAGO = {
       'Transferencia': '<p><strong>Datos para transferir</strong></p><p class="datos-banco">Banco Ejemplo · Cuenta Vista<br>N° 0000-1234-5678<br>RUT 11.111.111-1<br>Artesanías Rayen<br>pagos@ejemplo.cl</p><p class="nota">Envía el comprobante por WhatsApp. (Simulado)</p>',
@@ -327,11 +399,45 @@
       location.hash = 'pago';
     });
 
-    $('#btn-pagar').addEventListener('click', () => {
+    $('#btn-pagar').addEventListener('click', async () => {
       if (!metodo || !datos) return;
       const ov = $('#procesando');
       $('#procesando-texto').textContent = metodo === 'Transferencia' ? 'Registrando tu pedido…' : `Conectando con ${metodo}…`;
       ov.hidden = false;
+      if (USA_API) {
+        const espera = new Promise(r => setTimeout(r, 1200));
+        let pedido = null;
+        let fallo = null;
+        try {
+          pedido = await api('tienda/' + encodeURIComponent(SLUG) + '/pedidos', {
+            method: 'POST',
+            body: {
+              cliente: { nombre: datos.nombre, telefono: datos.telefono, direccion: datos.direccion },
+              fechaEntrega: datos.fechaEntrega,
+              comentario: datos.comentario || '',
+              pago: metodo,
+              items: lineas().map(l => ({ id: l.p.id, cantidad: l.cantidad }))
+            }
+          });
+        } catch (e) {
+          fallo = e;
+        }
+        await espera;
+        try { await cargarTienda(); } catch (e) {}
+        ov.hidden = true;
+        if (!pedido) {
+          toast(fallo.message);
+          if (fallo.status === 409) location.hash = 'carrito';
+          else refrescar();
+          return;
+        }
+        carrito = {};
+        guardarCarrito();
+        ultimo = pedido;
+        metodo = null;
+        location.hash = 'confirmacion';
+        return;
+      }
       setTimeout(() => {
         const pedido = crearPedido({
           cliente: { nombre: datos.nombre, telefono: datos.telefono, direccion: datos.direccion },
@@ -350,29 +456,55 @@
     });
 
     window.addEventListener('hashchange', ruta);
-    window.addEventListener('storage', e => { if (e.key === KEY) refrescar(); });
+    if (USA_API) {
+      setInterval(async () => {
+        if (document.hidden || !$('#procesando').hidden) return;
+        try { await cargarTienda(); refrescar(); } catch (e) {}
+      }, 30000);
+    } else {
+      window.addEventListener('storage', e => { if (e.key === KEY) refrescar(); });
+    }
     ruta();
   }
 
-  function sesionActual() {
-    const raw = leer(KEY_SESION);
-    if (!raw) return null;
+  async function initClienteApi() {
     try {
-      const s = JSON.parse(raw);
-      const u = (window.DEMO_DATA.usuarios || []).find(x => x.usuario === s.usuario);
-      return u ? s : null;
-    } catch (e) { return null; }
+      await cargarTienda();
+    } catch (e) {
+      remoto = { productos: [], pedidos: [], siguienteId: 0 };
+      setTimeout(() => toast(e.message), 300);
+    }
+    initCliente();
+  }
+
+  function sesionActual() {
+    const s = sesionGuardada();
+    if (!s) return null;
+    if (USA_API) return s.token ? s : null;
+    const u = (window.DEMO_DATA.usuarios || []).find(x => x.usuario === s.usuario);
+    return u ? s : null;
   }
 
   function initNegocio() {
-    const entrar = () => {
+    const form = $('#form-login');
+    const error = $('#login-error');
+    let ultimoInicial = null;
+
+    const entrar = async () => {
+      if (USA_API) {
+        try {
+          ultimoInicial = await cargarPanel();
+        } catch (e) {
+          error.textContent = e.message;
+          error.hidden = false;
+          return;
+        }
+      }
       document.body.classList.remove('sin-sesion');
-      iniciarPanel();
+      iniciarPanel(ultimoInicial);
     };
     if (sesionActual()) { entrar(); return; }
 
-    const form = $('#form-login');
-    const error = $('#login-error');
     $('#login-negocio').textContent = window.DEMO_DATA.negocio.nombre;
 
     $('#btn-datos-prueba').addEventListener('click', () => {
@@ -385,13 +517,32 @@
 
     form.addEventListener('input', () => { error.hidden = true; });
 
-    form.addEventListener('submit', e => {
+    form.addEventListener('submit', async e => {
       e.preventDefault();
       const usuario = form.usuario.value.trim().toLowerCase();
       const clave = form.clave.value;
       if (!usuario || !clave) {
         error.textContent = 'Ingresa tu usuario y contraseña.';
         error.hidden = false;
+        return;
+      }
+      if (USA_API) {
+        const btn = form.querySelector('[type=submit]');
+        btn.disabled = true;
+        btn.textContent = 'Ingresando…';
+        try {
+          const r = await api('auth/login', { method: 'POST', body: { usuario, clave } });
+          escribir(KEY_SESION, JSON.stringify({ usuario, nombre: r.nombre, negocio: r.negocio, token: r.token, desde: new Date().toISOString() }));
+          await entrar();
+        } catch (e2) {
+          error.textContent = e2.message;
+          error.hidden = false;
+          form.clave.value = '';
+          form.clave.focus();
+        } finally {
+          btn.disabled = false;
+          btn.textContent = 'Ingresar';
+        }
         return;
       }
       const u = (window.DEMO_DATA.usuarios || []).find(x => x.usuario === usuario && x.clave === clave);
@@ -409,17 +560,19 @@
     form.usuario.focus();
   }
 
-  function iniciarPanel() {
+  function iniciarPanel(rawInicial) {
     const neg = window.DEMO_DATA.negocio;
     const reps = window.DEMO_DATA.repartidores;
     const SECCIONES = ['inicio', 'pedidos', 'productos', 'balance'];
-    const maxSemilla = maxId(window.DEMO_DATA.pedidos);
+    const maxSemilla = maxId(USA_API ? cargar().pedidos : window.DEMO_DATA.pedidos);
     $('#neg-nombre').textContent = neg.nombre;
+    if (USA_API && neg.slug) $$('a[href="cliente.html"]').forEach(a => { a.href = 'cliente.html?tienda=' + encodeURIComponent(neg.slug); });
 
     let seccion = 'inicio';
     let filtro = 'Todos';
     let busqueda = '';
-    let ultimoRaw = null;
+    let ultimoRaw = rawInicial || null;
+    let sincronizando = false;
     let audio = null;
     let stream = null;
     let timerScan = null;
@@ -466,7 +619,7 @@
 
     function render() {
       const db = cargar();
-      ultimoRaw = leer(KEY);
+      if (!USA_API) ultimoRaw = leer(KEY);
       const nuevos = db.pedidos.filter(p => p.estado === 'Nuevo').length;
       const b = $('#nav-badge');
       b.textContent = nuevos;
@@ -693,6 +846,7 @@
 
       $$('[data-estado]', cont).forEach(b => b.addEventListener('click', () => {
         const nuevo = b.dataset.estado;
+        if (USA_API) { cambiarPedido(id, { estado: nuevo }, `Pedido #${id}: ${nuevo}`); return; }
         actualizar(db => { const x = db.pedidos.find(y => y.id === id); if (x) x.estado = nuevo; });
         toast(`Pedido #${id}: ${nuevo}`);
         render();
@@ -702,6 +856,7 @@
       $('#btn-asignar', cont).addEventListener('click', () => {
         const rid = $('#sel-rep', cont).value;
         if (!rid) { toast('Elige un repartidor de la lista'); return; }
+        if (USA_API) { cambiarPedido(id, { repartidor: rid }, `Asignado a ${repartidor(rid).nombre}`); return; }
         actualizar(db => { const x = db.pedidos.find(y => y.id === id); if (x) x.repartidor = rid; });
         toast(`Asignado a ${repartidor(rid).nombre}`);
         render();
@@ -716,6 +871,19 @@
       });
 
       $('#btn-ticket', cont).addEventListener('click', () => verTicket(id));
+    }
+
+    async function cambiarPedido(id, cambio, mensaje) {
+      $$('#modal-contenido button').forEach(b => { b.disabled = true; });
+      try {
+        const p = await api('panel/pedidos/' + id, { method: 'PATCH', body: cambio });
+        reemplazar(remoto.pedidos, p);
+        toast(mensaje);
+      } catch (e) {
+        toast(e.message);
+      }
+      render();
+      if (!$('#modal').hidden) abrirPedido(id);
     }
 
     function abrirEditor(id, codigoInicial) {
@@ -742,7 +910,7 @@
           <button class="btn btn-primario btn-grande" type="submit">Guardar</button>
         </form>`);
 
-      $('#form-prod', cont).addEventListener('submit', e => {
+      $('#form-prod', cont).addEventListener('submit', async e => {
         e.preventDefault();
         const f = e.target;
         const nombre = f.nombre.value.trim();
@@ -760,6 +928,24 @@
           codigo: f.codigo.value.trim(),
           descripcion: f.descripcion.value.trim()
         };
+        if (USA_API) {
+          const btn = $('[type=submit]', f);
+          btn.disabled = true;
+          try {
+            const prod = await api(id ? 'panel/productos/' + id : 'panel/productos', { method: id ? 'PUT' : 'POST', body: datos });
+            reemplazar(remoto.productos, prod);
+            if (!id) remoto.productos.push(remoto.productos.shift());
+            cerrarModal();
+            toast(p ? 'Producto actualizado' : 'Producto agregado');
+            render();
+          } catch (e2) {
+            err.textContent = e2.message;
+            err.hidden = false;
+          } finally {
+            btn.disabled = false;
+          }
+          return;
+        }
         actualizar(db2 => {
           const x = id && db2.productos.find(y => y.id === id);
           if (x) Object.assign(x, datos);
@@ -772,6 +958,17 @@
     }
 
     function cambiarStock(id, delta) {
+      if (USA_API) {
+        const p = remoto.productos.find(x => x.id === id);
+        if (!p) return;
+        const previo = p.stock;
+        p.stock = Math.max(0, p.stock + delta);
+        render();
+        api('panel/productos/' + id + '/stock', { method: 'POST', body: { delta } })
+          .then(prod => { reemplazar(remoto.productos, prod); render(); })
+          .catch(e => { p.stock = previo; render(); toast(e.message); });
+        return;
+      }
       actualizar(db => {
         const p = db.productos.find(x => x.id === id);
         if (p) p.stock = Math.max(0, p.stock + delta);
@@ -970,8 +1167,13 @@
     }
 
     function actualizarNotifUI() {
-      const estado = 'Notification' in window ? Notification.permission : 'unsupported';
       const btn = $('#btn-notif');
+      if (!window.isSecureContext) {
+        btn.hidden = true;
+        $('#aviso-notif').hidden = true;
+        return;
+      }
+      const estado = 'Notification' in window ? Notification.permission : 'unsupported';
       btn.classList.toggle('activo', estado === 'granted');
       btn.setAttribute('aria-label', estado === 'granted' ? 'Notificaciones activadas' : 'Activar notificaciones');
       btn.title = estado === 'granted' ? 'Notificaciones activadas' : 'Activar notificaciones';
@@ -1035,7 +1237,23 @@
       sonar();
     }
 
-    function sincronizar() {
+    async function sincronizar() {
+      if (USA_API) {
+        if (sincronizando || document.hidden) return;
+        sincronizando = true;
+        try {
+          const raw = await cargarPanel();
+          if (raw !== ultimoRaw) {
+            ultimoRaw = raw;
+            revisarNuevos();
+            render();
+          }
+        } catch (e) {
+        } finally {
+          sincronizando = false;
+        }
+        return;
+      }
       const raw = leer(KEY);
       if (raw === ultimoRaw) return;
       revisarNuevos();
@@ -1050,6 +1268,20 @@
         const elegidos = [...disponibles].sort(() => Math.random() - 0.5).slice(0, 1 + Math.floor(Math.random() * 2));
         const entrega = new Date();
         entrega.setDate(entrega.getDate() + 1 + Math.floor(Math.random() * 2));
+        if (USA_API) {
+          const c = azar(window.DEMO_DATA.clientesEjemplo);
+          api('tienda/' + encodeURIComponent(neg.slug) + '/pedidos', {
+            method: 'POST',
+            body: {
+              cliente: { nombre: c.nombre, telefono: c.telefono, direccion: c.direccion },
+              fechaEntrega: isoLocal(entrega),
+              comentario: '',
+              pago: azar(PAGOS),
+              items: elegidos.map(p => ({ id: p.id, cantidad: 1 + Math.floor(Math.random() * 2) }))
+            }
+          }).then(() => sincronizar()).catch(e => toast(e.message));
+          return;
+        }
         crearPedido({
           cliente: Object.assign({}, azar(window.DEMO_DATA.clientesEjemplo)),
           fechaEntrega: isoLocal(entrega),
@@ -1107,13 +1339,14 @@
     $('#btn-csv-ventas').addEventListener('click', exportarVentas);
     $('#btn-csv-stock').addEventListener('click', exportarStock);
     $('#btn-reset').addEventListener('click', confirmarReset);
+    $('#btn-reset').hidden = USA_API;
     $('#btn-salir').addEventListener('click', () => {
       borrar(KEY_SESION);
       location.replace('negocio.html');
     });
 
     window.addEventListener('hashchange', ruta);
-    window.addEventListener('storage', e => { if (e.key === KEY) sincronizar(); });
+    if (!USA_API) window.addEventListener('storage', e => { if (e.key === KEY) sincronizar(); });
     document.addEventListener('visibilitychange', () => { if (!document.hidden) sincronizar(); });
     setInterval(sincronizar, 3000);
 
@@ -1124,6 +1357,6 @@
   registrarSW();
   const pagina = document.body.dataset.page;
   if (pagina === 'portada') initPortada();
-  if (pagina === 'cliente') initCliente();
+  if (pagina === 'cliente') { if (USA_API) initClienteApi(); else initCliente(); }
   if (pagina === 'negocio') initNegocio();
 })();

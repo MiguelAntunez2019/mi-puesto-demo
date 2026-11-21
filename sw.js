@@ -1,4 +1,4 @@
-const CACHE = 'mi-puesto-v3';
+const CACHE = 'mi-puesto-v4';
 const ARCHIVOS = [
   './',
   './index.html',
@@ -26,7 +26,8 @@ self.addEventListener('activate', event => {
 
 self.addEventListener('fetch', event => {
   const req = event.request;
-  if (req.method !== 'GET' || new URL(req.url).origin !== self.location.origin) return;
+  const url = new URL(req.url);
+  if (req.method !== 'GET' || url.origin !== self.location.origin || url.pathname.includes('/api/')) return;
   event.respondWith(
     fetch(req)
       .then(res => {
