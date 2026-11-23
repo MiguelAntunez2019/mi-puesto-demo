@@ -4,16 +4,16 @@
   const iso = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
   const productos = [
-    { id: 'p1', nombre: 'Manta tejida a telar', descripcion: 'Lana de oveja hilada a mano, diseño ñimin.', precio: 45990, stock: 4, stockMin: 2, emoji: '🧣', tono: '#F3D9C8', categoria: 'Textil', codigo: '7801234500011', activo: true },
+    { id: 'p1', nombre: 'Manta tejida a telar', descripcion: 'Lana de oveja hilada a mano, diseño ñimin.', precio: 45990, stock: 4, stockMin: 2, emoji: '🧣', tono: '#FFE1E5', categoria: 'Textil', codigo: '7801234500011', activo: true },
     { id: 'p2', nombre: 'Witral decorativo', descripcion: 'Telar pequeño para colgar, lana natural.', precio: 34990, stock: 6, stockMin: 2, emoji: '🧶', tono: '#EADBF0', categoria: 'Textil', codigo: '7801234500028', activo: true },
     { id: 'p3', nombre: 'Trapelakucha en alpaca', descripcion: 'Réplica de joya tradicional hecha a mano.', precio: 18990, stock: 3, stockMin: 3, emoji: '📿', tono: '#E4E8F2', categoria: 'Platería', codigo: '7801234500035', activo: true },
     { id: 'p4', nombre: 'Aros de alpaca', descripcion: 'Aros livianos con diseño de luna.', precio: 9990, stock: 15, stockMin: 4, emoji: '💎', tono: '#DDEEF0', categoria: 'Platería', codigo: '7801234500042', activo: true },
-    { id: 'p5', nombre: 'Canasto de ñocha', descripcion: 'Fibra vegetal tejida, 25 cm de diámetro.', precio: 14990, stock: 8, stockMin: 3, emoji: '🧺', tono: '#F4E6C9', categoria: 'Cestería', codigo: '7801234500059', activo: true },
-    { id: 'p6', nombre: 'Set de cucharas de raulí', descripcion: 'Tres cucharas talladas a mano en madera nativa.', precio: 12990, stock: 2, stockMin: 2, emoji: '🥄', tono: '#F2D4CF', categoria: 'Madera', codigo: '7801234500066', activo: true },
-    { id: 'p7', nombre: 'Merkén ahumado 100 g', descripcion: 'Ají cacho de cabra ahumado y molido con semillas.', precio: 3990, stock: 40, stockMin: 10, emoji: '🌶️', tono: '#F8D3C5', categoria: 'Despensa', codigo: '7801234500073', activo: true },
-    { id: 'p8', nombre: 'Miel de ulmo 500 g', descripcion: 'Miel cruda de la Araucanía.', precio: 7990, stock: 12, stockMin: 5, emoji: '🍯', tono: '#FBE7B5', categoria: 'Despensa', codigo: '7801234500080', activo: true },
-    { id: 'p9', nombre: 'Calcetines de lana', descripcion: 'Tejidos a palillo, talla única.', precio: 6990, stock: 20, stockMin: 5, emoji: '🧦', tono: '#E3EED9', categoria: 'Textil', codigo: '7801234500097', activo: true },
-    { id: 'p10', nombre: 'Tazón de greda', descripcion: 'Greda cocida, apto para bebidas calientes.', precio: 8990, stock: 4, stockMin: 5, emoji: '🏺', tono: '#EFDCCB', categoria: 'Madera', codigo: '7801234500103', activo: true }
+    { id: 'p5', nombre: 'Canasto de ñocha', descripcion: 'Fibra vegetal tejida, 25 cm de diámetro.', precio: 14990, stock: 8, stockMin: 3, emoji: '🧺', tono: '#FFF0F2', categoria: 'Cestería', codigo: '7801234500059', activo: true },
+    { id: 'p6', nombre: 'Set de cucharas de raulí', descripcion: 'Tres cucharas talladas a mano en madera nativa.', precio: 12990, stock: 2, stockMin: 2, emoji: '🥄', tono: '#FFDDE2', categoria: 'Madera', codigo: '7801234500066', activo: true },
+    { id: 'p7', nombre: 'Merkén ahumado 100 g', descripcion: 'Ají cacho de cabra ahumado y molido con semillas.', precio: 3990, stock: 40, stockMin: 10, emoji: '🌶️', tono: '#FFE1E5', categoria: 'Despensa', codigo: '7801234500073', activo: true },
+    { id: 'p8', nombre: 'Miel de ulmo 500 g', descripcion: 'Miel cruda de la Araucanía.', precio: 7990, stock: 12, stockMin: 5, emoji: '🍯', tono: '#FCE4EC', categoria: 'Despensa', codigo: '7801234500080', activo: true },
+    { id: 'p9', nombre: 'Calcetines de lana', descripcion: 'Tejidos a palillo, talla única.', precio: 6990, stock: 20, stockMin: 5, emoji: '🧦', tono: '#E3F3E7', categoria: 'Textil', codigo: '7801234500097', activo: true },
+    { id: 'p10', nombre: 'Tazón de greda', descripcion: 'Greda cocida, apto para bebidas calientes.', precio: 8990, stock: 4, stockMin: 5, emoji: '🏺', tono: '#F6E8EB', categoria: 'Madera', codigo: '7801234500103', activo: true }
   ];
 
   const clientes = [

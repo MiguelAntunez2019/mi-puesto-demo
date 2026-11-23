@@ -2,7 +2,7 @@
 
 **Mi Puesto** es una app que se usa desde el celular, pensada para artesanos, feriantes, pymes y vendedores online de Chile.
 Con ella el negocio tiene su tienda online, se entera al instante de cada pedido (con ticket para imprimir) y lleva el control de su stock con la cámara.
-Además tiene el balance del día y de la semana, y exporta a Excel en un toque. Todo sin instalar nada raro: es una web que se "instala" como app.
+Además tiene el balance del día y de la semana, y exporta planillas en un toque. Todo sin instalar nada raro: es una web que se "instala" como app.
 
 > ⚠️ Este repositorio es una **maqueta navegable de demostración**. No hay backend: los datos viven en el navegador (localStorage), los pagos son simulados y los teléfonos de ejemplo son ficticios.
 
@@ -75,7 +75,7 @@ GitHub Pages sirve por HTTPS, que es justo lo que se necesita para la cámara, l
    - pulsa **📷 Escanear código**. Se abre la cámara trasera y la lectura se simula a los pocos segundos. En Chrome para Android, si apuntas a un código de barras real, lo lee de verdad.
 8. En **Balance**:
    - revisa las ventas del día y de la semana, el gráfico y los productos más vendidos;
-   - descarga los **Excel de ventas y de stock**.
+   - descarga las **planillas de ventas y de stock**.
 
 > Atajo: en **Inicio**, **⚡ Simular pedido** crea un pedido de prueba a los 5 segundos. Úsalo para mostrar la notificación con el celular bloqueado o con otra app abierta.
 

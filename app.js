@@ -7,10 +7,13 @@
   const KEY_SESION = 'miPuesto.sesion.v1';
   const ESTADOS = ['Nuevo', 'Preparando', 'Despachado', 'Entregado'];
   const PAGOS = ['Transferencia', 'Mercado Pago', 'Webpay'];
-  const TONOS = ['#F3D9C8', '#EADBF0', '#DDEEF0', '#F4E6C9', '#E3EED9', '#FBE7B5', '#F2D4CF'];
+  const TONOS = ['#FFE1E5', '#EFE3F7', '#DFF0F5', '#FFF0F2', '#E3F3E7', '#FCE4EC', '#ECEAF4'];
+  const MAPA_TONOS = { '#F3D9C8': '#FFE1E5', '#F4E6C9': '#FFF0F2', '#FBE7B5': '#FCE4EC', '#F2D4CF': '#FFDDE2', '#EFDCCB': '#F6E8EB', '#F8D3C5': '#FFE1E5', '#E3EED9': '#E3F3E7' };
+  const tonoDe = p => { const t = String(p.tono || TONOS[0]).toUpperCase(); return MAPA_TONOS[t] || t; };
   const memoria = Object.create(null);
   const USA_API = location.protocol !== 'file:' && !/github\.io$/.test(location.hostname) && location.port !== '8765';
   const SLUG = new URLSearchParams(location.search).get('tienda') || 'artesanias-rayen';
+  const GOOGLE_CLIENT_ID = '';
   let remoto = null;
 
   const $ = (s, c = document) => c.querySelector(s);
@@ -291,7 +294,7 @@
         else control = `<button type="button" class="btn btn-agregar" data-mas="${esc(p.id)}">Agregar</button>`;
         const aviso = !agotado && p.stock <= p.stockMin ? `<span class="etiqueta etiqueta-alerta">¡Últimas ${p.stock}!</span>` : '';
         return `<article class="producto">
-          <div class="producto-foto" style="--tono:${esc(p.tono || TONOS[0])}">${esc(p.emoji)}${aviso}</div>
+          <div class="producto-foto" style="--tono:${esc(tonoDe(p))}">${esc(p.emoji)}${aviso}</div>
           <div class="producto-info">
             <h3>${esc(p.nombre)}</h3>
             <p class="producto-desc">${esc(p.descripcion || '')}</p>
@@ -306,7 +309,7 @@
       const ls = lineas();
       $('#carrito-lista').innerHTML = ls.length
         ? ls.map(({ p, cantidad }) => `<div class="linea-carrito">
-            <div class="mini-foto" style="--tono:${esc(p.tono || TONOS[0])}">${esc(p.emoji)}</div>
+            <div class="mini-foto" style="--tono:${esc(tonoDe(p))}">${esc(p.emoji)}</div>
             <div class="linea-info"><strong>${esc(p.nombre)}</strong><span>${clp(p.precio)} c/u</span></div>
             <strong class="linea-sub">${clp(p.precio * cantidad)}</strong>
             <div class="stepper stepper-chico"><button type="button" data-menos="${esc(p.id)}" aria-label="Quitar uno">−</button><span>${cantidad}</span><button type="button" data-mas="${esc(p.id)}" aria-label="Agregar uno">+</button></div>
@@ -485,6 +488,81 @@
     return u ? s : null;
   }
 
+  function leerTokenGoogle(t) {
+    const b = t.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    return JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(b), ch => ch.charCodeAt(0))));
+  }
+
+  function initLoginSocial(entrar) {
+    const caja = $('#login-social');
+    const nota = $('#nota-social');
+    const NOMBRES = { google: 'Google', facebook: 'Facebook', instagram: 'Instagram' };
+    const u = window.DEMO_DATA.usuarios[0];
+    caja.hidden = false;
+
+    const ingresar = (red, nombre, email) => {
+      escribir(KEY_SESION, JSON.stringify({ usuario: u.usuario, nombre: nombre || u.nombre, red, email: email || '', desde: new Date().toISOString() }));
+      entrar();
+    };
+
+    const simular = red => {
+      const m = $('#modal');
+      $('#modal-contenido').innerHTML = `<h2>Continuar con ${NOMBRES[red]}</h2>
+        <p>Mi Puesto recibirá tu nombre y tu correo para crear o abrir la cuenta de tu negocio.</p>
+        <p class="nota">Simulación para la demo: en la versión final se abre la ventana de ${NOMBRES[red]} para autorizar.</p>
+        <div class="acciones-col">
+          <button type="button" class="btn btn-primario" data-ok>Continuar como ${window.DEMO_DATA.negocio.duena}</button>
+          <button type="button" class="btn btn-texto" data-no>Cancelar</button>
+        </div>`;
+      m.hidden = false;
+      const cerrar = () => {
+        m.hidden = true;
+        m.removeEventListener('click', clic);
+        document.removeEventListener('keydown', tecla);
+      };
+      const clic = e => {
+        if (e.target.closest('[data-ok]')) { cerrar(); ingresar(red); return; }
+        if (e.target.closest('[data-no], [data-cerrar]')) cerrar();
+      };
+      const tecla = e => { if (e.key === 'Escape') cerrar(); };
+      m.addEventListener('click', clic);
+      document.addEventListener('keydown', tecla);
+      $('[data-ok]', m).focus();
+    };
+
+    $$('[data-red]', caja).forEach(b => b.addEventListener('click', () => simular(b.dataset.red)));
+
+    const botonGoogleSimulado = () => {
+      $('#btn-google').innerHTML = `<button type="button" class="btn btn-social"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5a5.6 5.6 0 0 1-2.4 3.6v3h3.9c2.2-2.1 3.5-5.1 3.5-8.8z"/><path fill="#34A853" d="M12 24c3.2 0 6-1.1 7.9-2.9l-3.9-3c-1 .7-2.4 1.1-4 1.1-3.1 0-5.7-2.1-6.7-4.9h-4v3.1A12 12 0 0 0 12 24z"/><path fill="#FBBC05" d="M5.3 14.3a7.2 7.2 0 0 1 0-4.6V6.6h-4a12 12 0 0 0 0 10.8z"/><path fill="#EA4335" d="M12 4.8c1.8 0 3.3.6 4.6 1.8l3.4-3.4A12 12 0 0 0 1.3 6.6l4 3.1C6.3 6.9 8.9 4.8 12 4.8z"/></svg>Continuar con Google</button>`;
+      $('#btn-google button').addEventListener('click', () => simular('google'));
+      nota.textContent = 'Ingreso con redes sociales en modo simulación (demo).';
+    };
+
+    if (!GOOGLE_CLIENT_ID) { botonGoogleSimulado(); return; }
+    nota.textContent = 'Google es real. Facebook e Instagram son una simulación en esta demo.';
+    const sc = document.createElement('script');
+    sc.src = 'https://accounts.google.com/gsi/client';
+    sc.async = true;
+    sc.onerror = botonGoogleSimulado;
+    sc.onload = () => {
+      google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        ux_mode: 'popup',
+        callback: r => {
+          try {
+            const d = leerTokenGoogle(r.credential);
+            ingresar('google', d.name, d.email);
+          } catch (e) {
+            toast('No se pudo ingresar con Google. Intenta de nuevo.');
+          }
+        }
+      });
+      const ancho = Math.min(400, Math.max(200, Math.floor(caja.getBoundingClientRect().width)));
+      google.accounts.id.renderButton($('#btn-google'), { theme: 'outline', size: 'large', text: 'continue_with', shape: 'pill', width: ancho, locale: 'es' });
+    };
+    document.head.appendChild(sc);
+  }
+
   function initNegocio() {
     const form = $('#form-login');
     const error = $('#login-error');
@@ -514,6 +592,8 @@
       error.hidden = true;
       form.querySelector('[type=submit]').focus();
     });
+
+    if (!USA_API) initLoginSocial(entrar);
 
     form.addEventListener('input', () => { error.hidden = true; });
 
@@ -635,7 +715,9 @@
       const hoy = new Date();
       const h = hoy.getHours();
       const saludo = h < 12 ? 'Buenos días' : h < 20 ? 'Buenas tardes' : 'Buenas noches';
-      $('#saludo').textContent = `${saludo}, ${neg.duena} 👋`;
+      const ses = sesionGuardada();
+      const quien = ses && ses.red === 'google' && ses.nombre ? ses.nombre.split(' ')[0] : neg.duena;
+      $('#saludo').textContent = `${saludo}, ${quien} 👋`;
       const deHoy = db.pedidos.filter(p => mismoDia(new Date(p.creado), hoy));
       const ventas = deHoy.reduce((s, p) => s + total(p), 0);
       const porPreparar = db.pedidos.filter(p => p.estado === 'Nuevo' || p.estado === 'Preparando').length;
@@ -647,7 +729,7 @@
         kpi('Stock bajo', bajos.length, bajos.length ? 'alerta' : '');
       $('#inicio-stock').innerHTML = bajos.length
         ? bajos.map(p => `<div class="fila">
-            <div class="mini-foto" style="--tono:${esc(p.tono || TONOS[0])}">${esc(p.emoji)}</div>
+            <div class="mini-foto" style="--tono:${esc(tonoDe(p))}">${esc(p.emoji)}</div>
             <div class="fila-info"><strong>${esc(p.nombre)}</strong><span>${p.stock <= 0 ? 'Agotado' : `Quedan ${p.stock}`} · mínimo ${p.stockMin}</span></div>
             <a href="#productos" class="btn btn-secundario btn-chico">Reponer</a>
           </div>`).join('')
@@ -672,7 +754,7 @@
           ? '<span class="etiqueta etiqueta-error">Agotado</span>'
           : p.stock <= p.stockMin ? '<span class="etiqueta etiqueta-alerta">Stock bajo</span>' : '';
         return `<div class="fila-producto">
-          <div class="mini-foto" style="--tono:${esc(p.tono || TONOS[0])}">${esc(p.emoji)}</div>
+          <div class="mini-foto" style="--tono:${esc(tonoDe(p))}">${esc(p.emoji)}</div>
           <div class="fila-info"><strong>${esc(p.nombre)}</strong><span>${clp(p.precio)} · ${esc(p.codigo || 'sin código')}</span>${estado}</div>
           <div class="stock-control">
             <button type="button" data-stock="-1" data-id="${esc(p.id)}" aria-label="Restar stock de ${esc(p.nombre)}">−</button>
@@ -1039,7 +1121,7 @@
         const cont = abrirModal(`<h2>Código leído</h2>
           <p class="codigo-leido">${esc(codigo)}</p>
           <div class="fila">
-            <div class="mini-foto" style="--tono:${esc(p.tono || TONOS[0])}">${esc(p.emoji)}</div>
+            <div class="mini-foto" style="--tono:${esc(tonoDe(p))}">${esc(p.emoji)}</div>
             <div class="fila-info"><strong>${esc(p.nombre)}</strong><span>${clp(p.precio)} · Stock: <b id="scan-stock">${p.stock}</b></span></div>
           </div>
           <div class="acciones-2">
@@ -1101,7 +1183,7 @@
         ]));
       });
       descargarCSV(`ventas_${isoLocal(new Date())}.csv`, filas);
-      toast('Excel de ventas descargado');
+      toast('Planilla de ventas descargada');
     }
 
     function exportarStock() {
@@ -1113,7 +1195,7 @@
         p.precio * p.stock
       ]));
       descargarCSV(`stock_${isoLocal(new Date())}.csv`, filas);
-      toast('Excel de stock descargado');
+      toast('Planilla de stock descargada');
     }
 
     function confirmarReset() {

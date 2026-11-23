@@ -1,13 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <rect width="512" height="512" rx="112" fill="#C8502A"/>
-  <path d="M96 196 L128 120 H384 L416 196 Z" fill="#FFF7EF"/>
-  <path d="M96 196 H157 V208 A30.5 30.5 0 0 1 96 208 Z" fill="#FBE3D6"/>
-  <path d="M157 196 H218 V208 A30.5 30.5 0 0 1 157 208 Z" fill="#FFF7EF"/>
-  <path d="M218 196 H294 V208 A38 38 0 0 1 218 208 Z" fill="#FBE3D6"/>
-  <path d="M294 196 H355 V208 A30.5 30.5 0 0 1 294 208 Z" fill="#FFF7EF"/>
-  <path d="M355 196 H416 V208 A30.5 30.5 0 0 1 355 208 Z" fill="#FBE3D6"/>
-  <rect x="128" y="250" width="256" height="150" rx="16" fill="#FFF7EF"/>
-  <rect x="226" y="300" width="60" height="100" rx="10" fill="#A23E1E"/>
-  <path d="M160 290 h40 v40 h-40 z" fill="#F4B860"/>
-  <path d="M312 290 h40 v40 h-40 z" fill="#F4B860"/>
+  <rect width="512" height="512" rx="112" fill="#D7263D"/>
+  <path d="M96 196 L128 120 H384 L416 196 Z" fill="#FFFFFF"/>
+  <path d="M96 196 H157 V208 A30.5 30.5 0 0 1 96 208 Z" fill="#FFD6DC"/>
+  <path d="M157 196 H218 V208 A30.5 30.5 0 0 1 157 208 Z" fill="#FFFFFF"/>
+  <path d="M218 196 H294 V208 A38 38 0 0 1 218 208 Z" fill="#FFD6DC"/>
+  <path d="M294 196 H355 V208 A30.5 30.5 0 0 1 294 208 Z" fill="#FFFFFF"/>
+  <path d="M355 196 H416 V208 A30.5 30.5 0 0 1 355 208 Z" fill="#FFD6DC"/>
+  <rect x="128" y="250" width="256" height="150" rx="16" fill="#FFFFFF"/>
+  <rect x="226" y="300" width="60" height="100" rx="10" fill="#A8172B"/>
+  <path d="M160 290 h40 v40 h-40 z" fill="#FFB3BE"/>
+  <path d="M312 290 h40 v40 h-40 z" fill="#FFB3BE"/>
 </svg>
