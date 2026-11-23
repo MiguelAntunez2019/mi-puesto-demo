@@ -1,4 +1,4 @@
-const CACHE = 'mi-puesto-v6';
+const CACHE = 'mi-puesto-v7';
 const ARCHIVOS = [
   './',
   './index.html',
