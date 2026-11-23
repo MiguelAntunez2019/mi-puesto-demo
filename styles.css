@@ -709,22 +709,3 @@ body:not(.sin-sesion) #pantalla-login { display: none; }
 .separador { display: flex; align-items: center; gap: 10px; color: var(--texto-suave); font-size: .88rem; margin-top: 4px; }
 .separador::before, .separador::after { content: ""; flex: 1; height: 1px; background: var(--borde); }
 
-.comparativa { text-align: left; margin: 8px 0 28px; }
-.comparativa h2 { text-align: center; }
-.comparativa > .nota { text-align: center; margin: 0 0 12px; }
-.tabla-scroll { overflow-x: auto; border-radius: var(--radio); box-shadow: var(--sombra); border: 1px solid var(--borde); background: var(--superficie); margin-bottom: 10px; }
-.tabla-comp { width: 100%; min-width: 400px; border-collapse: collapse; font-size: .82rem; }
-.tabla-comp th, .tabla-comp td { padding: 9px 6px; border-bottom: 1px solid var(--borde); text-align: center; vertical-align: middle; }
-.tabla-comp tbody tr:last-child > * { border-bottom: 0; }
-.tabla-comp thead th { font-size: .74rem; color: var(--texto-suave); font-weight: 700; line-height: 1.2; }
-.tabla-comp tbody th { text-align: left; font-weight: 600; position: sticky; left: 0; background: var(--superficie); min-width: 128px; }
-.tabla-comp .col-mia { background: var(--acento-suave); }
-.tabla-comp thead .col-mia { color: var(--acento-oscuro); font-size: .82rem; }
-.tabla-comp i { font-style: normal; font-weight: 700; display: inline-block; font-size: .74rem; }
-.tabla-comp i.si { color: var(--ok); }
-.tabla-comp i.no { color: var(--texto-suave); font-weight: 600; }
-.tabla-comp i.medio { color: var(--aviso-texto); }
-.tabla-comp i.si::before { content: "✓ "; }
-.tabla-comp i.no::before { content: "✕ "; }
-.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-.tabla-comp .col-mia i.si { color: #1F6B3F; }
