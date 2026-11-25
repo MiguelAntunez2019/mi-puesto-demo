@@ -5,6 +5,7 @@
   const KEY_CARRITO = 'miPuesto.carrito.v1';
   const KEY_VISTOS = 'miPuesto.vistos.v1';
   const KEY_SESION = 'miPuesto.sesion.v1';
+  const KEY_REGISTRO = 'miPuesto.registro.v1';
   const ESTADOS = ['Nuevo', 'Preparando', 'Despachado', 'Entregado'];
   const PAGOS = ['Transferencia', 'Mercado Pago', 'Webpay'];
   const TONOS = ['#FFE1E5', '#EFE3F7', '#DFF0F5', '#FFF0F2', '#E3F3E7', '#FCE4EC', '#ECEAF4'];
@@ -40,7 +41,16 @@
   const clonar = o => JSON.parse(JSON.stringify(o));
   const maxId = pedidos => pedidos.reduce((m, p) => Math.max(m, p.id), 1000);
 
+  function registroDemo() {
+    if (USA_API) return null;
+    try {
+      const r = JSON.parse(leer(KEY_REGISTRO));
+      return r && r.negocio && r.usuario ? r : null;
+    } catch (e) { return null; }
+  }
+
   function semilla() {
+    if (registroDemo()) return { productos: [], pedidos: [], siguienteId: 1001 };
     const d = clonar(window.DEMO_DATA);
     return { productos: d.productos, pedidos: d.pedidos, siguienteId: maxId(d.pedidos) + 1 };
   }
@@ -132,7 +142,7 @@
       throw new Error('Tu sesión expiró. Ingresa de nuevo.');
     }
     if (!r.ok) {
-      const msg = r.status === 429 ? 'Demasiados intentos. Espera un minuto.' : (datos && datos.error) || 'Ocurrió un error. Intenta de nuevo.';
+      const msg = r.status === 429 ? (ruta === 'auth/registro' ? 'Se crearon demasiados puestos desde esta conexión. Intenta de nuevo en una hora.' : 'Demasiados intentos. Espera un minuto.') : (datos && datos.error) || 'Ocurrió un error. Intenta de nuevo.';
       const e = new Error(msg);
       e.status = r.status;
       throw e;
@@ -219,6 +229,9 @@
     const neg = window.DEMO_DATA.negocio;
     $('#tienda-nombre').textContent = neg.nombre;
     $('#tienda-slogan').textContent = neg.slogan;
+    if (registroDemo() || (USA_API && neg.slug !== 'artesanias-rayen')) {
+      $('#tienda-hero').textContent = neg.ciudad ? `🛍️ Pide en línea, con despacho en ${neg.ciudad} y alrededores.` : '🛍️ Pide en línea y coordina la entrega por WhatsApp.';
+    }
     document.title = `${neg.nombre} · Tienda`;
     const VISTAS = ['catalogo', 'carrito', 'pago', 'confirmacion'];
     const DETALLE_PAGO = {
@@ -582,6 +595,102 @@
     document.head.appendChild(sc);
   }
 
+  function initRegistro(entrar) {
+    const form = $('#form-registro');
+    const error = $('#registro-error');
+    const titulo = $('.login-main h1');
+    const vistaLogin = [$('#login-social'), $('#form-login'), $('#registro-cta'), $('.login-demo'), $('#login-negocio')];
+    if (registroDemo()) $('.login-demo').hidden = true;
+    const ocultosAntes = new Map();
+
+    const mostrar = registro => {
+      if (registro) {
+        vistaLogin.forEach(el => { ocultosAntes.set(el, el.hidden); el.hidden = true; });
+        form.hidden = false;
+        titulo.textContent = 'Crea tu puesto';
+        form.negocio.focus();
+      } else {
+        vistaLogin.forEach(el => { if (ocultosAntes.has(el)) el.hidden = ocultosAntes.get(el); });
+        form.hidden = true;
+        titulo.textContent = 'Ingresa a tu negocio';
+        $('#form-login').usuario.focus();
+      }
+      window.scrollTo(0, 0);
+    };
+
+    $('#btn-registro').addEventListener('click', () => { history.replaceState(null, '', '#registro'); mostrar(true); });
+    $('#btn-ya-tengo').addEventListener('click', () => { history.replaceState(null, '', location.pathname + location.search); mostrar(false); });
+    form.addEventListener('input', () => { error.hidden = true; });
+    form.usuario.addEventListener('input', () => {
+      const v = form.usuario.value.toLowerCase().replace(/\s+/g, '');
+      if (v !== form.usuario.value) form.usuario.value = v;
+    });
+
+    const fallar = msg => {
+      error.textContent = msg;
+      error.hidden = false;
+      error.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    };
+
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      const d = {
+        negocio: form.negocio.value.trim(),
+        nombre: form.nombre.value.trim(),
+        ciudad: form.ciudad.value.trim(),
+        telefono: form.telefono.value.trim(),
+        usuario: form.usuario.value.trim().toLowerCase(),
+        clave: form.clave.value,
+        sitio: form.sitio.value
+      };
+      if (d.negocio.length < 3) return fallar('Escribe el nombre de tu negocio.');
+      if (d.nombre.length < 2) return fallar('Escribe tu nombre.');
+      if (d.telefono && d.telefono.replace(/\D/g, '').length < 8) return fallar('Ingresa un teléfono válido o déjalo en blanco.');
+      if (!/^[a-z0-9][a-z0-9._-]{2,29}$/.test(d.usuario)) return fallar('El usuario debe tener entre 3 y 30 letras o números, sin espacios ni tildes.');
+      if (d.clave.length < 8) return fallar('La contraseña debe tener al menos 8 caracteres.');
+
+      if (USA_API) {
+        const btn = form.querySelector('[type=submit]');
+        btn.disabled = true;
+        btn.textContent = 'Creando tu puesto…';
+        try {
+          const r = await api('auth/registro', { method: 'POST', body: d });
+          escribir(KEY_SESION, JSON.stringify({ usuario: r.usuario, nombre: r.nombre, negocio: r.negocio, token: r.token, desde: new Date().toISOString() }));
+          history.replaceState(null, '', location.pathname);
+          await entrar();
+          toast('¡Tu puesto está listo! Agrega tu primer producto.');
+        } catch (e2) {
+          fallar(e2.message);
+        } finally {
+          btn.disabled = false;
+          btn.textContent = 'Crear mi puesto';
+        }
+        return;
+      }
+
+      if ((window.DEMO_DATA.usuarios || []).some(u => u.usuario === d.usuario)) return fallar('Ese usuario ya está ocupado. Prueba con otro.');
+      const reg = {
+        negocio: { nombre: d.negocio, slogan: '', duena: d.nombre, ciudad: d.ciudad, telefonoVisible: d.telefono },
+        usuario: { usuario: d.usuario, clave: d.clave, nombre: d.nombre }
+      };
+      escribir(KEY_REGISTRO, JSON.stringify(reg));
+      Object.assign(window.DEMO_DATA.negocio, reg.negocio);
+      window.DEMO_DATA.usuarios.push(reg.usuario);
+      guardar(semilla());
+      escribir(KEY_VISTOS, '1000');
+      escribir(KEY_CARRITO, '{}');
+      escribir(KEY_SESION, JSON.stringify({ usuario: d.usuario, nombre: d.nombre, desde: new Date().toISOString() }));
+      history.replaceState(null, '', location.pathname);
+      entrar();
+      toast('¡Tu puesto está listo! Agrega tu primer producto.');
+    });
+
+    if (location.hash === '#registro') mostrar(true);
+    window.addEventListener('hashchange', () => {
+      if (location.hash === '#registro' && document.body.classList.contains('sin-sesion') && form.hidden) mostrar(true);
+    });
+  }
+
   function initNegocio() {
     const form = $('#form-login');
     const error = $('#login-error');
@@ -613,6 +722,7 @@
     });
 
     initLoginSocial(entrar, error);
+    initRegistro(entrar);
 
     form.addEventListener('input', () => { error.hidden = true; });
 
@@ -782,7 +892,7 @@
           </div>
           <button type="button" class="btn-icono" data-editar="${esc(p.id)}" aria-label="Editar ${esc(p.nombre)}">✏️</button>
         </div>`;
-      }).join('') || '<p class="vacio">No se encontraron productos.</p>';
+      }).join('') || (db.productos.length ? '<p class="vacio">No se encontraron productos.</p>' : '<p class="vacio">Aún no tienes productos. Toca «+ Nuevo producto» para agregar el primero.</p>');
     }
 
     function abreviar(n) {
@@ -1218,11 +1328,21 @@
     }
 
     function confirmarReset() {
+      const propio = !!registroDemo();
       const cont = abrirModal(`<h2>¿Restablecer la demo?</h2>
-        <p>Se borrarán los pedidos, productos y cambios hechos durante la presentación, y se cargarán los datos de ejemplo.</p>
+        <p>${propio ? 'Se borrará el negocio que creaste en este navegador y volverá la tienda de ejemplo.' : 'Se borrarán los pedidos, productos y cambios hechos durante la presentación, y se cargarán los datos de ejemplo.'}</p>
         <button type="button" class="btn btn-primario btn-grande" id="si-reset">Sí, restablecer</button>
         <button type="button" class="btn btn-texto" data-cerrar>Cancelar</button>`);
       $('#si-reset', cont).addEventListener('click', () => {
+        if (propio) {
+          borrar(KEY_REGISTRO);
+          borrar(KEY_SESION);
+          borrar(KEY_VISTOS);
+          guardar(semilla());
+          escribir(KEY_CARRITO, '{}');
+          location.replace('negocio.html');
+          return;
+        }
         guardar(semilla());
         escribir(KEY_VISTOS, String(maxSemilla));
         escribir(KEY_CARRITO, '{}');
@@ -1370,7 +1490,7 @@
         const entrega = new Date();
         entrega.setDate(entrega.getDate() + 1 + Math.floor(Math.random() * 2));
         if (USA_API) {
-          const c = azar(window.DEMO_DATA.clientesEjemplo);
+          const c = azar(window.DEMO_DATA.clientesEjemplo) || { nombre: 'Cliente de prueba', telefono: '+56 9 1234 5678', direccion: 'Dirección de prueba 123' };
           api('tienda/' + encodeURIComponent(neg.slug) + '/pedidos', {
             method: 'POST',
             body: {
@@ -1453,6 +1573,12 @@
 
     ruta();
     revisarNuevos();
+  }
+
+  const regDemo = registroDemo();
+  if (regDemo) {
+    Object.assign(window.DEMO_DATA.negocio, regDemo.negocio);
+    if (!window.DEMO_DATA.usuarios.some(u => u.usuario === regDemo.usuario.usuario)) window.DEMO_DATA.usuarios.push(regDemo.usuario);
   }
 
   registrarSW();

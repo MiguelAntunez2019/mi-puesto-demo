@@ -41,6 +41,38 @@
         <p class="form-error" id="login-error" role="alert" hidden></p>
         <button type="submit" class="btn btn-primario btn-grande">Ingresar</button>
       </form>
+      <div class="registro-cta" id="registro-cta">
+        <p>¿Aún no tienes tu puesto?</p>
+        <button type="button" class="btn btn-secundario btn-grande" id="btn-registro">✨ Crea tu puesto gratis</button>
+      </div>
+      <form id="form-registro" class="form tarjeta" novalidate hidden>
+        <label>Nombre de tu negocio
+          <input name="negocio" autocomplete="organization" maxlength="120" required placeholder="Ej: Tejidos Doña Rosa">
+        </label>
+        <label>Tu nombre
+          <input name="nombre" autocomplete="name" maxlength="120" required>
+        </label>
+        <label><span>Ciudad <small>(opcional)</small></span>
+          <input name="ciudad" autocomplete="address-level2" maxlength="80">
+        </label>
+        <label><span>Teléfono o WhatsApp <small>(opcional)</small></span>
+          <input name="telefono" type="tel" inputmode="tel" autocomplete="tel" maxlength="20" placeholder="+56 9 1234 5678">
+        </label>
+        <label>Elige un usuario
+          <input name="usuario" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="30" required placeholder="Ej: tejidosrosa">
+          <small class="nota">Entre 3 y 30 letras o números, sin espacios ni tildes.</small>
+        </label>
+        <label>Contraseña
+          <input name="clave" type="password" autocomplete="new-password" minlength="8" maxlength="100" required>
+          <small class="nota">Mínimo 8 caracteres.</small>
+        </label>
+        <label class="campo-trampa" aria-hidden="true">Sitio web
+          <input name="sitio" tabindex="-1" autocomplete="off">
+        </label>
+        <p class="form-error" id="registro-error" role="alert" hidden></p>
+        <button type="submit" class="btn btn-primario btn-grande">Crear mi puesto</button>
+        <button type="button" class="btn btn-texto" id="btn-ya-tengo">Ya tengo cuenta, quiero ingresar</button>
+      </form>
       <div class="tarjeta login-demo">
         <p><strong>Datos de prueba</strong></p>
         <p>Usuario <code>rayen</code> · Contraseña <code>demo123</code></p>

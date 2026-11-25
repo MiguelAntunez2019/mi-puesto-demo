@@ -696,6 +696,10 @@ body:not(.sin-sesion) #pantalla-login { display: none; }
 .login-main h1 { font-size: 1.7rem; margin: 14px 0 4px; }
 .login-main .form { text-align: left; margin-top: 18px; }
 .login-demo { text-align: left; }
+.registro-cta { margin: 18px 0; }
+.registro-cta p { margin: 0 0 8px; color: var(--texto-suave); }
+.login-main .form label small { font-weight: normal; }
+.campo-trampa { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
 .login-demo p { margin: 0 0 8px; }
 .login-demo code { background: var(--bg); border: 1px solid var(--borde); border-radius: 6px; padding: 1px 6px; font-size: .95em; }
 .btn-salir { width: 100%; margin-top: 6px; }
